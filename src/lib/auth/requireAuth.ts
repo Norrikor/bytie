@@ -3,8 +3,9 @@ import { redirect } from 'next/navigation'
 
 import { authOptions } from '@/lib/auth/authOptions'
 
-export default async function Home() {
+export async function requireAuth() {
   const session = await getServerSession(authOptions)
-  if (session) redirect('/feed')
-  redirect('/login')
+  if (!session) redirect('/login')
+  return session
 }
+

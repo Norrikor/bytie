@@ -1,0 +1,7 @@
+node_modules
+.next
+prisma/migrations/*/migration_lock.toml
+/.env*
+Dockerfile
+docker-compose.yml
+

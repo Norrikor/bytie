@@ -1,0 +1,198 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth requires the following models to exist:
+// - User, Account, Session, VerificationToken
+// We extend `User` with `passwordHash` for email+password credentials.
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String?   @unique
+  emailVerified DateTime?
+  image          String?
+  passwordHash  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts          Account[]
+  sessions          Session[]
+  // For MVP we don't use email verification flows; keeping `VerificationToken`
+  // model for compatibility without a user<->token relation.
+
+  ownedObjects ObjectCare[] @relation("ObjectCareOwner")
+  memberships   ObjectCareMember[]
+
+  actionsCreated ObjectAction[] @relation("ActionCreatedBy")
+  eventsCreated  ActionEvent[]  @relation("ActionEventActor")
+
+  inviterInvitations ObjectShareInvitation[] @relation("InviterInvitations")
+  invitedInvitations ObjectShareInvitation[] @relation("InvitedInvitations")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+
+  refresh_token  String?
+  access_token   String?
+  expires_at     Int?
+  token_type     String?
+  scope          String?
+  id_token       String?
+  session_state  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  sessionToken String   @unique
+  userId        String
+  expires       DateTime
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum ObjectCareRole {
+  OWNER
+  COLLABORATOR
+}
+
+model ObjectCare {
+  id String @id @default(cuid())
+
+  ownerId String
+  owner   User   @relation("ObjectCareOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  name String
+  kind String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members ObjectCareMember[]
+  actions ObjectAction[]
+  events  ActionEvent[]
+  invitations ObjectShareInvitation[]
+}
+
+model ObjectCareMember {
+  objectCareId String
+  userId        String
+
+  role    ObjectCareRole @default(COLLABORATOR)
+  joinedAt DateTime       @default(now())
+  endedAt  DateTime?
+
+  objectCare ObjectCare @relation(fields: [objectCareId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([objectCareId, userId])
+  @@index([userId])
+  @@index([objectCareId, role])
+}
+
+model ObjectAction {
+  id String @id @default(cuid())
+
+  objectCareId String
+  objectCare   ObjectCare @relation(fields: [objectCareId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User   @relation("ActionCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+
+  label String
+  icon  String
+  color String?
+  sortIndex Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events ActionEvent[]
+}
+
+model ActionEvent {
+  id String @id @default(cuid())
+
+  objectCareId   String
+  objectCare     ObjectCare @relation(fields: [objectCareId], references: [id], onDelete: Cascade)
+
+  objectActionId String?
+  objectAction   ObjectAction? @relation(fields: [objectActionId], references: [id], onDelete: SetNull)
+
+  actorId String
+  actor   User   @relation("ActionEventActor", fields: [actorId], references: [id], onDelete: Cascade)
+
+  occurredAt DateTime @default(now())
+
+  labelSnapshot String
+  iconSnapshot  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([objectCareId, occurredAt(sort: Desc)])
+  @@index([actorId, occurredAt(sort: Desc)])
+  @@index([objectActionId, occurredAt(sort: Desc)])
+}
+
+enum ObjectSharePermission {
+  READ_AND_ADD_EVENTS
+}
+
+enum ObjectShareInvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  REVOKED
+}
+
+model ObjectShareInvitation {
+  id String @id @default(cuid())
+
+  objectCareId String
+  objectCare   ObjectCare @relation(fields: [objectCareId], references: [id], onDelete: Cascade)
+
+  inviterId String
+  inviter   User @relation("InviterInvitations", fields: [inviterId], references: [id], onDelete: Cascade)
+
+  invitedEmail String
+  invitedUserId String?
+  invitedUser   User? @relation("InvitedInvitations", fields: [invitedUserId], references: [id])
+
+  permission ObjectSharePermission @default(READ_AND_ADD_EVENTS)
+  status ObjectShareInvitationStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  acceptedAt DateTime?
+  declinedAt DateTime?
+  revokedAt DateTime?
+}
