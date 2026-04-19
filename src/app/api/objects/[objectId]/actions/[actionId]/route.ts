@@ -8,7 +8,7 @@ import { userCanReadObjectCare } from '@/lib/acl/objectCare'
 
 const UpdateActionSchema = z.object({
   label: z.string().min(2).max(40).trim().optional(),
-  icon: z.string().min(1).max(8).trim().optional(),
+  icon: z.string().min(1).max(64).trim().optional(),
   color: z.string().max(32).trim().nullable().optional(),
   sortIndex: z.number().int().min(0).max(100000).optional(),
 })

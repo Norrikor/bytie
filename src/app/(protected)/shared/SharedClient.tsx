@@ -57,9 +57,20 @@ export default function SharedClient({ objects, currentUserId }: { objects: Shar
     }
   }
 
-  async function revokeMember(objectId: string, memberUserId: string) {
-    await fetch(`/api/objects/${objectId}/members/${memberUserId}`, { method: 'DELETE' })
-    router.refresh()
+  async function revokeMember(objectId: string, memberUserId: string, memberLabel: string | null) {
+    const label = memberLabel?.trim() ? ` («${memberLabel.trim()}»)` : ''
+    const ok = confirm(
+      `Убрать участника из объекта${label}? Человек потеряет доступ к этой «заботе».`,
+    )
+    if (!ok) return
+
+    try {
+      const res = await fetch(`/api/objects/${objectId}/members/${memberUserId}`, { method: 'DELETE' })
+      if (!res.ok) return
+      router.refresh()
+    } catch {
+      // тихо
+    }
   }
 
   async function revokeInvitation(invitationId: string) {
@@ -108,7 +119,7 @@ export default function SharedClient({ objects, currentUserId }: { objects: Shar
                     {isOwner && m.userId !== currentUserId ? (
                       <button
                         type="button"
-                        onClick={() => revokeMember(obj.objectId, m.userId)}
+                        onClick={() => revokeMember(obj.objectId, m.userId, m.name)}
                         className="btnIcon btnIcon--danger"
                       >
                         Убрать

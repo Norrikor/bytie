@@ -6,11 +6,20 @@ import ObjectCareEditPanel from './ObjectCareEditPanel'
 import { prisma } from '@/lib/db/prisma'
 import ObjectCareInteractive from './ObjectCareInteractive'
 import { getCurrentUser } from '@/lib/auth/getCurrentUser'
+import { formatEventOccurredAtLabel } from '@/lib/feed/eventDateLabel'
+
+const PAGE_SIZE = 20
+
+function getFirst(param: string | string[] | undefined) {
+  return Array.isArray(param) ? param[0] : param
+}
 
 export default async function ObjectCarePage({
   params,
+  searchParams,
 }: {
   params: { objectId: string }
+  searchParams: Record<string, string | string[] | undefined>
 }) {
   const current = await getCurrentUser()
   if (!current?.user?.name) redirect('/onboarding/1')
@@ -28,10 +37,27 @@ export default async function ObjectCarePage({
     select: { id: true, label: true, icon: true, color: true, createdById: true },
   })
 
+  const totalCount = await prisma.actionEvent.count({
+    where: { objectCareId: params.objectId, deletedAt: null },
+  })
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+  const pageRaw = getFirst(searchParams.page)
+  const requestedPage = Number.parseInt(pageRaw ?? '1', 10)
+  const currentPage = Number.isNaN(requestedPage)
+    ? 1
+    : Math.min(Math.max(requestedPage, 1), totalPages)
+  const skip = (currentPage - 1) * PAGE_SIZE
+
+  const memberCount = await prisma.objectCareMember.count({
+    where: { objectCareId: params.objectId, endedAt: null },
+  })
+  const showActorForObject = memberCount > 1
+
   const events = await prisma.actionEvent.findMany({
     where: { objectCareId: params.objectId, deletedAt: null },
-    orderBy: { occurredAt: 'desc' },
-    take: 30,
+    orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }],
+    skip,
+    take: PAGE_SIZE,
     select: {
       id: true,
       objectActionId: true,
@@ -64,9 +90,16 @@ export default async function ObjectCarePage({
           actorId: e.actorId,
           actorName: e.actor.name,
           occurredAt: e.occurredAt.toISOString(),
+          occurredAtLabel: formatEventOccurredAtLabel(e.occurredAt),
           labelSnapshot: e.labelSnapshot,
           iconSnapshot: e.iconSnapshot,
+          showActor: showActorForObject,
         }))}
+        historyPagination={{
+          currentPage,
+          totalPages,
+          totalCount,
+        }}
       />
 
       {isOwner ? (

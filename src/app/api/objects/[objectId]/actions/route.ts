@@ -7,7 +7,7 @@ import { prisma } from '@/lib/db/prisma'
 
 const CreateActionSchema = z.object({
   label: z.string().min(2).max(40).trim(),
-  icon: z.string().min(1).max(8).trim(), // emoji or short string
+  icon: z.string().min(1).max(64).trim(), // emoji sequence or short string
   color: z.string().max(32).trim().optional(),
 })
 

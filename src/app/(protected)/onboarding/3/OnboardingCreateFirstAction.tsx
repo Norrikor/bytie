@@ -3,49 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-const emojiPresets = [
-  // === ОРИГИНАЛЬНЫЕ (12) ===
-  '💧', '🍽️', '😺', '🩺', '🔥', '🌿', '🐾', '✨', '☀️', '🫀', '🌱',
-
-  // === КОММУНИКАЦИЯ (7) ===
-  '📞', '💬', '📧', '📲', '🔔', '🗣️', '👥',
-
-  // === ЭМОЦИИ И ОТНОШЕНИЯ (9) ===
-  '❤️', '💋', '🤗', '😊', '🥰', '😢', '🤝', '🙏', '💪',
-
-  // === ДВИЖЕНИЕ И ЛОКАЦИИ (6) ===
-  '🚗', '✈️', '🏃', '🚶', '🏠', '🚪',
-
-  // === ДЕНЬГИ И ПОКУПКИ (7) — расширено ===
-  '💰', '🛒', '📦', '💳', '🛍️', '🧾', '🏦',
-
-  // === ЕДА И ЗДОРОВЬЕ (9) — добавлены физиология ===
-  '☕', '🥗', '💊', '🏥', '🧘', '🚿', '🛌', '💤', '💩', '🚽', '🧻', '🩸',
-
-  // === РАБОТА И ЗАДАЧИ (8) ===
-  '💼', '📝', '✅', '🧹', '🔧', '🗑️', '📊', '👔',
-
-  // === РАЗВЛЕЧЕНИЯ И ХОББИ (10) ===
-  '🎬', '📖', '🎧', '🎨', '⚽', '🎂', '🎁', '🎼', '🖌️', '🎮',
-
-  // === ПРИРОДА И ПОГОДА (5) ===
-  '🐶', '🌸', '🌧️', '🌡️', '🌪️',
-
-  // === НОВОЕ: ФИЗИОЛОГИЯ И ПРИВЫЧКИ (6) ===
-  '💨', '🚬', '🍷', '🍺', '🥃', '🍾',
-
-  // === НОВОЕ: СПОРТ И АКТИВНОСТЬ (5) ===
-  '🏋️', '🤸', '🚴', '🏊', '🧖‍♀️',
-
-  // === НОВОЕ: УЧЕБА И ТВОРЧЕСТВО (4) ===
-  '📚', '🎓', '✍️', '🧠',
-
-  // === НОВОЕ: ДОМ И БЫТ (5) ===
-  '🧺', '🧼', '🧴', '🪴', '🛋️',
-
-  // === НОВОЕ: ТРАНСПОРТ И ПРОЧЕЕ (3) ===
-  '⛽', '🅿️', '👶', '💍'
-];
+import ActionEmojiField from '../../_components/ActionEmojiField'
 
 export default function OnboardingCreateFirstAction({ objectCareId }: { objectCareId: string }) {
   const router = useRouter()
@@ -100,21 +58,7 @@ export default function OnboardingCreateFirstAction({ objectCareId }: { objectCa
         />
       </div>
 
-      <div className="field">
-        <span className="fieldLabel">Эмодзи</span>
-        <div className="emojiPicker">
-          {emojiPresets.map((e) => (
-            <button
-              key={e}
-              type="button"
-              onClick={() => setIcon(e)}
-              className={`emojiBtn${e === icon ? ' emojiBtn--active' : ''}`}
-            >
-              {e}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ActionEmojiField value={icon} onChange={setIcon} disabled={submitting} />
 
       {error ? <div className="errorText">{error}</div> : null}
 

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 
 import { prisma } from '@/lib/db/prisma'
 import { getCurrentUser } from '@/lib/auth/getCurrentUser'
+import { formatEventOccurredAtLabel } from '@/lib/feed/eventDateLabel'
 import { FEED_RANGE_DEFAULT, FEED_RANGE_MS } from '@/lib/feed/feedRange'
 import FeedClient from './FeedClient'
 
@@ -140,6 +141,16 @@ export default async function FeedPage({
   const objectCareIds = baseMemberships.map((m) => m.objectCare.id)
   if (objectCareIds.length === 0) redirect('/onboarding/2')
 
+  const memberCountsByObject = await prisma.objectCareMember.groupBy({
+    by: ['objectCareId'],
+    where: { objectCareId: { in: objectCareIds }, endedAt: null },
+    _count: { _all: true },
+  })
+  const objectHasMultipleMembers = new Map<string, boolean>()
+  for (const row of memberCountsByObject) {
+    objectHasMultipleMembers.set(row.objectCareId, row._count._all > 1)
+  }
+
   const hasAnyEvents = await prisma.actionEvent.count({
     where: { actorId: userId, deletedAt: null },
   })
@@ -194,6 +205,7 @@ export default async function FeedPage({
       iconSnapshot: true,
       labelSnapshot: true,
       actorId: true,
+      objectCareId: true,
       actor: { select: { name: true } },
       objectCare: { select: { name: true } },
     },
@@ -236,17 +248,13 @@ export default async function FeedPage({
         events={events.map((ev) => ({
           id: ev.id,
           occurredAt: ev.occurredAt.toISOString(),
-          occurredAtLabel: ev.occurredAt.toLocaleString('ru-RU', {
-            day: 'numeric',
-            month: 'long',
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
+          occurredAtLabel: formatEventOccurredAtLabel(ev.occurredAt),
           iconSnapshot: ev.iconSnapshot,
           labelSnapshot: ev.labelSnapshot,
           actorId: ev.actorId,
           actorName: ev.actor?.name ?? null,
           objectCareName: ev.objectCare?.name ?? null,
+          showActor: objectHasMultipleMembers.get(ev.objectCareId) ?? false,
         }))}
         currentPage={currentPage}
         totalPages={totalPages}

@@ -4,6 +4,8 @@ import { useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 
+import ActionEventCard from '../_components/ActionEventCard'
+import FeedPaginationBar from '../_components/FeedPaginationBar'
 import { FEED_RANGE_DEFAULT, FEED_RANGE_PRESETS } from '@/lib/feed/feedRange'
 
 type ObjectItem = {
@@ -14,12 +16,15 @@ type ObjectItem = {
 
 type EventItem = {
   id: string
+  occurredAt: string
   occurredAtLabel: string
   iconSnapshot: string
   labelSnapshot: string
   actorId: string
   actorName: string | null
   objectCareName: string | null
+  /** Показывать, кто нажал кнопку — только если у объекта больше одного участника */
+  showActor: boolean
 }
 
 type Actor = { id: string; name: string | null }
@@ -160,8 +165,6 @@ export default function FeedClient({
   }
 
   const [showFilters, setShowFilters] = useState(false)
-  const [showPagePopover, setShowPagePopover] = useState(false)
-  const [pageInput, setPageInput] = useState(String(currentPage))
   const [filterObjectId, setFilterObjectId] = useState(currentFilters.objectCareId ?? '')
   const [filterActionId, setFilterActionId] = useState(currentFilters.objectActionId ?? '')
   const [filterActorId, setFilterActorId] = useState(currentFilters.actorId ?? '')
@@ -260,13 +263,6 @@ export default function FeedClient({
     const p = new URLSearchParams(paginationBaseParams)
     p.set('page', String(safe))
     startTransition(() => router.push(`/feed?${p.toString()}`))
-  }
-
-  function submitPage() {
-    const n = Number.parseInt(pageInput, 10)
-    if (Number.isNaN(n)) return
-    goToPage(n)
-    setShowPagePopover(false)
   }
 
   return (
@@ -468,81 +464,28 @@ export default function FeedClient({
         <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, opacity: isPending ? 0.6 : 1, transition: 'opacity 200ms' }}>
             {events.map((ev) => (
-              <div key={ev.id} className="eventCard">
-                <span className="eventIcon">{ev.iconSnapshot}</span>
-                <div className="eventBody">
-                  <div className="eventLabel">
-                    <Link
-                      href={`/people/${ev.actorId}`}
-                      className="eventActor"
-                      style={{ textDecoration: 'underline', textDecorationColor: 'var(--border)' }}
-                    >
-                      {ev.actorName ?? '…'}
-                    </Link>
-                    {' '}— {ev.labelSnapshot}
-                  </div>
-                  <div className="eventMeta">
-                    {ev.objectCareName} · {ev.occurredAtLabel}
-                  </div>
-                </div>
-              </div>
+              <ActionEventCard
+                key={ev.id}
+                occurredAt={ev.occurredAt}
+                occurredAtLabel={ev.occurredAtLabel}
+                iconSnapshot={ev.iconSnapshot}
+                labelSnapshot={ev.labelSnapshot}
+                objectCareName={ev.objectCareName}
+                showObjectPill
+                showActor={ev.showActor}
+                actorId={ev.actorId}
+                actorName={ev.actorName}
+              />
             ))}
           </div>
 
-          <div className="cardSoft" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, position: 'relative' }}>
-            <button
-              type="button"
-              className="btnGhost"
-              style={{ width: 'auto', padding: '10px 14px' }}
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage <= 1 || isPending}
-            >
-              ← Назад
-            </button>
-
-            <button
-              type="button"
-              className="btnIcon"
-              style={{ padding: '10px 14px' }}
-              onClick={() => {
-                setPageInput(String(currentPage))
-                setShowPagePopover((v) => !v)
-              }}
-              disabled={totalPages <= 1 || isPending}
-            >
-              {currentPage} из {totalPages}
-            </button>
-            {showPagePopover ? (
-              <div className="popoverPagePicker">
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input
-                    type="number"
-                    min={1}
-                    max={totalPages}
-                    value={pageInput}
-                    onChange={(e) => setPageInput(e.target.value)}
-                    className="pagePickerInput"
-                  />
-                  <button type="button" className="btnIcon btnIcon--accent" onClick={submitPage}>
-                    Перейти
-                  </button>
-                </div>
-              </div>
-            ) : null}
-
-            <button
-              type="button"
-              className="btnGhost"
-              style={{ width: 'auto', padding: '10px 14px' }}
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage >= totalPages || isPending}
-            >
-              Вперёд →
-            </button>
-          </div>
-          <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>
-            Всего записей: {totalCount}
-          </p>
+          <FeedPaginationBar
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            disabled={isPending}
+            onNavigate={(p) => goToPage(p)}
+          />
         </>
       )}
     </div>

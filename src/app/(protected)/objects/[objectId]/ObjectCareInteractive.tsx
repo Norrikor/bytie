@@ -1,7 +1,18 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+
+import ActionEmojiField from '../../_components/ActionEmojiField'
+import ActionEventCard from '../../_components/ActionEventCard'
+import ConfirmDialog from '../../_components/ConfirmDialog'
+import FeedPaginationBar from '../../_components/FeedPaginationBar'
+
+type ConfirmDeleteTarget =
+  | null
+  | { kind: 'event'; eventId: string }
+  | { kind: 'action'; actionId: string }
 
 type Action = {
   id: string
@@ -17,24 +28,27 @@ type EventItem = {
   actorId: string
   actorName: string | null
   occurredAt: string
+  occurredAtLabel: string
   labelSnapshot: string
   iconSnapshot: string
+  showActor: boolean
 }
-
-const emojiPresets = ['💧', '🍽️', '😺', '🩺', '🎮', '🔥', '🌿', '🐾', '✨', '☀️', '🫀', '🌱']
 
 export default function ObjectCareInteractive({
   objectId,
   currentUserId,
   actions,
   events,
+  historyPagination,
 }: {
   objectId: string
   currentUserId: string
   actions: Action[]
   events: EventItem[]
+  historyPagination: { currentPage: number; totalPages: number; totalCount: number }
 }) {
   const router = useRouter()
+  const [navPending, startNav] = useTransition()
 
   const [localEvents, setLocalEvents] = useState<EventItem[]>(events)
   useEffect(() => setLocalEvents(events), [events])
@@ -69,6 +83,25 @@ export default function ObjectCareInteractive({
 
   const [editingEventId, setEditingEventId] = useState<string | null>(null)
   const [editEventActionId, setEditEventActionId] = useState<string | null>(null)
+  const [actionDeleteInFlight, setActionDeleteInFlight] = useState(false)
+  const [eventDeleteInFlight, setEventDeleteInFlight] = useState<string | null>(null)
+  const [confirmDeleteTarget, setConfirmDeleteTarget] = useState<ConfirmDeleteTarget>(null)
+
+  const confirmDeleteCopy = useMemo(() => {
+    if (!confirmDeleteTarget) return { title: '', message: '' }
+    if (confirmDeleteTarget.kind === 'event') {
+      return {
+        title: 'Удалить запись из истории?',
+        message:
+          'Запись исчезнет из списка. Несколько секунд можно отменить через кнопку «Отменить» внизу экрана.',
+      }
+    }
+    return {
+      title: 'Удалить действие?',
+      message:
+        'Кнопка пропадёт из блока «Действия». Записи в истории останутся — с тем же эмодзи и названием.',
+    }
+  }, [confirmDeleteTarget])
 
   function openEditAction(a: Action) {
     setEditingActionId(a.id)
@@ -123,9 +156,9 @@ export default function ObjectCareInteractive({
     }
   }
 
-  async function deleteAction(actionId: string) {
-    const ok = confirm('Удалить действие? История сохранится, подпись и эмодзи останутся.')
-    if (!ok) return
+  async function runDeleteAction(actionId: string) {
+    if (actionDeleteInFlight) return
+    setActionDeleteInFlight(true)
     try {
       const res = await fetch(`/api/objects/${objectId}/actions/${actionId}`, { method: 'DELETE' })
       if (!res.ok) {
@@ -136,6 +169,8 @@ export default function ObjectCareInteractive({
       router.refresh()
     } catch {
       setEditError('Не удалось подключиться')
+    } finally {
+      setActionDeleteInFlight(false)
     }
   }
 
@@ -154,9 +189,9 @@ export default function ObjectCareInteractive({
     }
   }
 
-  async function deleteEvent(eventId: string) {
-    const ok = confirm('Убрать запись из истории?')
-    if (!ok) return
+  async function runDeleteEvent(eventId: string) {
+    if (eventDeleteInFlight) return
+    setEventDeleteInFlight(eventId)
     try {
       const res = await fetch(`/api/action-events/${eventId}`, { method: 'DELETE' })
       if (!res.ok) return
@@ -164,9 +199,20 @@ export default function ObjectCareInteractive({
       setLocalEvents((prev) => prev.filter((e) => e.id !== eventId))
       setEditingEventId((curr) => (curr === eventId ? null : curr))
       showUndoToast(eventId)
+      router.refresh()
     } catch {
       // тихо
+    } finally {
+      setEventDeleteInFlight(null)
     }
+  }
+
+  async function confirmDeleteExec() {
+    if (!confirmDeleteTarget) return
+    const t = confirmDeleteTarget
+    setConfirmDeleteTarget(null)
+    if (t.kind === 'event') await runDeleteEvent(t.eventId)
+    else await runDeleteAction(t.actionId)
   }
 
   async function undoDelete(eventId: string) {
@@ -223,37 +269,18 @@ export default function ObjectCareInteractive({
 
         {showAddAction ? (
           <div style={{ marginBottom: 14, padding: '14px 16px', background: 'rgba(var(--ochreRgb), 0.04)', borderRadius: 'var(--radius)', border: '1px solid rgba(var(--ochreRgb), 0.15)' }}>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-              <div className="field" style={{ flex: 1 }}>
-                <label className="fieldLabel">Название</label>
-                <input
-                  type="text"
-                  value={newLabel}
-                  onChange={(e) => setNewLabel(e.target.value)}
-                  placeholder="Кормление, Прогулка…"
-                />
-              </div>
-              <div className="field" style={{ width: 90 }}>
-                <label className="fieldLabel">Эмодзи</label>
-                <input
-                  type="text"
-                  value={newIcon}
-                  onChange={(e) => setNewIcon(e.target.value)}
-                />
-              </div>
+            <div className="field">
+              <label className="fieldLabel">Название</label>
+              <input
+                type="text"
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                placeholder="Кормление, Прогулка…"
+              />
             </div>
 
-            <div className="emojiPicker" style={{ marginTop: 10 }}>
-              {emojiPresets.map((e) => (
-                <button
-                  key={e}
-                  type="button"
-                  onClick={() => setNewIcon(e)}
-                  className={`emojiBtn${e === newIcon ? ' emojiBtn--active' : ''}`}
-                >
-                  {e}
-                </button>
-              ))}
+            <div style={{ marginTop: 12 }}>
+              <ActionEmojiField value={newIcon} onChange={setNewIcon} disabled={adding} />
             </div>
 
             {addError ? <div className="errorText" style={{ marginTop: 8 }}>{addError}</div> : null}
@@ -311,23 +338,17 @@ export default function ObjectCareInteractive({
         {editingAction ? (
           <div style={{ marginTop: 14, padding: '14px 16px', background: 'rgba(var(--ochreRgb), 0.04)', borderRadius: 'var(--radius)', border: '1px solid rgba(var(--ochreRgb), 0.15)' }}>
             <div className="filtersPanelLabel" style={{ marginBottom: 10 }}>Редактировать действие</div>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-              <div className="field" style={{ flex: 1 }}>
-                <label className="fieldLabel">Название</label>
-                <input
-                  type="text"
-                  value={editLabel}
-                  onChange={(e) => setEditLabel(e.target.value)}
-                />
-              </div>
-              <div className="field" style={{ width: 90 }}>
-                <label className="fieldLabel">Эмодзи</label>
-                <input
-                  type="text"
-                  value={editIcon}
-                  onChange={(e) => setEditIcon(e.target.value)}
-                />
-              </div>
+            <div className="field">
+              <label className="fieldLabel">Название</label>
+              <input
+                type="text"
+                value={editLabel}
+                onChange={(e) => setEditLabel(e.target.value)}
+              />
+            </div>
+
+            <div style={{ marginTop: 12 }}>
+              <ActionEmojiField value={editIcon} onChange={setEditIcon} />
             </div>
 
             {editError ? <div className="errorText" style={{ marginTop: 8 }}>{editError}</div> : null}
@@ -343,11 +364,12 @@ export default function ObjectCareInteractive({
 
             <button
               type="button"
-              onClick={() => deleteAction(editingAction.id)}
+              onClick={() => setConfirmDeleteTarget({ kind: 'action', actionId: editingAction.id })}
+              disabled={actionDeleteInFlight}
               className="btnIcon btnIcon--danger"
               style={{ width: '100%', marginTop: 8, padding: '10px 14px' }}
             >
-              Удалить действие
+              {actionDeleteInFlight ? 'Удаляем…' : 'Удалить действие'}
             </button>
           </div>
         ) : null}
@@ -363,87 +385,130 @@ export default function ObjectCareInteractive({
             <p className="emptyStateText">Пока пусто — нажмите на эмодзи выше</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {localEvents.map((ev) => {
-              const isMine = ev.actorId === currentUserId
-              const showEdit = editingEventId === ev.id
-              return (
-                <div key={ev.id} className="eventCard" style={{ flexDirection: 'column', gap: 10 }}>
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                      <span className="eventIcon" style={{ fontSize: 22 }}>{ev.iconSnapshot}</span>
-                      <div className="eventBody">
-                        <div className="eventLabel">
-                          <span className="eventActor">{ev.actorName ?? '…'}</span> — {ev.labelSnapshot}
-                        </div>
-                        <div className="eventMeta">
-                          {new Date(ev.occurredAt).toLocaleString('ru', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                      </div>
-                    </div>
+          <div className="objectHistoryStack">
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+                opacity: navPending ? 0.65 : 1,
+                transition: 'opacity 180ms ease',
+              }}
+            >
+              {localEvents.map((ev) => {
+                const isMine = ev.actorId === currentUserId
+                const showEdit = editingEventId === ev.id
+                const evDeleting = eventDeleteInFlight === ev.id
+                return (
+                  <div key={ev.id} className="eventScopedBlock">
+                    <ActionEventCard
+                      occurredAt={ev.occurredAt}
+                      occurredAtLabel={ev.occurredAtLabel}
+                      iconSnapshot={ev.iconSnapshot}
+                      labelSnapshot={ev.labelSnapshot}
+                      showObjectPill={false}
+                      showActor={ev.showActor}
+                      actorId={ev.actorId}
+                      actorName={ev.actorName}
+                      trailing={
+                        isMine ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => openEditEvent(ev)}
+                              disabled={evDeleting}
+                              className="btnIcon btnIcon--accent"
+                              aria-label="Изменить запись"
+                            >
+                              ✎
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteTarget({ kind: 'event', eventId: ev.id })}
+                              disabled={evDeleting}
+                              className="btnIcon btnIcon--danger"
+                              aria-label="Удалить запись"
+                            >
+                              {evDeleting ? '…' : '🗑'}
+                            </button>
+                          </>
+                        ) : undefined
+                      }
+                    />
 
-                    {isMine ? (
-                      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                        <button
-                          type="button"
-                          onClick={() => openEditEvent(ev)}
-                          className="btnIcon btnIcon--accent"
-                        >
-                          ✎
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => deleteEvent(ev.id)}
-                          className="btnIcon btnIcon--danger"
-                        >
-                          🗑
-                        </button>
+                    {showEdit ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <div className="field">
+                          <label className="fieldLabel">Изменить действие</label>
+                          <select
+                            value={editEventActionId ?? ''}
+                            onChange={(e) => setEditEventActionId(e.target.value || null)}
+                          >
+                            {actions.map((a) => (
+                              <option key={a.id} value={a.id}>
+                                {a.icon} {a.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            type="button"
+                            onClick={() => saveEditedEvent(ev.id)}
+                            className="btnPrimary"
+                            style={{ flex: 1 }}
+                          >
+                            Сохранить
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingEventId(null)
+                              setEditEventActionId(null)
+                            }}
+                            className="btnGhost"
+                            style={{ flex: 1 }}
+                          >
+                            Отмена
+                          </button>
+                        </div>
                       </div>
                     ) : null}
                   </div>
+                )
+              })}
+            </div>
 
-                  {showEdit ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      <div className="field">
-                        <label className="fieldLabel">Изменить действие</label>
-                        <select
-                          value={editEventActionId ?? ''}
-                          onChange={(e) => setEditEventActionId(e.target.value || null)}
-                        >
-                          {actions.map((a) => (
-                            <option key={a.id} value={a.id}>
-                              {a.icon} {a.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+            <FeedPaginationBar
+              currentPage={historyPagination.currentPage}
+              totalPages={historyPagination.totalPages}
+              totalCount={historyPagination.totalCount}
+              disabled={navPending}
+              onNavigate={(p) =>
+                startNav(() => router.push(`/objects/${objectId}?page=${p}`))
+              }
+            />
 
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button
-                          type="button"
-                          onClick={() => saveEditedEvent(ev.id)}
-                          className="btnPrimary"
-                          style={{ flex: 1 }}
-                        >
-                          Сохранить
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setEditingEventId(null); setEditEventActionId(null) }}
-                          className="btnGhost"
-                          style={{ flex: 1 }}
-                        >
-                          Отмена
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              )
-            })}
+            <p className="objectHistoryFeedLink">
+              <Link href={`/feed?objectCareId=${encodeURIComponent(objectId)}&range=24h`} style={{ color: 'var(--ochre)' }}>
+                Открыть в общей ленте
+              </Link>
+            </p>
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmDeleteTarget !== null}
+        title={confirmDeleteCopy.title}
+        message={confirmDeleteCopy.message}
+        cancelLabel="Отмена"
+        confirmLabel={confirmDeleteTarget?.kind === 'event' ? 'Удалить запись' : 'Удалить действие'}
+        danger
+        onCancel={() => setConfirmDeleteTarget(null)}
+        onConfirm={() => void confirmDeleteExec()}
+      />
 
       {toastUndoEventId ? (
         <div className="toast">
