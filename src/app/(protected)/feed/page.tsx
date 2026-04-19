@@ -10,6 +10,7 @@ import {
   legacyYmdStartUtc,
   parseUtcIsoFromUrl,
 } from '@/lib/datetime/wallTime'
+import { getOnboardingProgress } from '@/lib/onboarding/getOnboardingProgress'
 import FeedClient from './FeedClient'
 
 const PAGE_SIZE = 20
@@ -41,9 +42,11 @@ export default async function FeedPage({
   searchParams: Record<string, string | string[] | undefined>
 }) {
   const current = await getCurrentUser()
-  if (!current?.user?.name) redirect('/onboarding/1')
+  if (!current?.user?.id) redirect('/login')
 
   const userId = current.user.id
+  const progress = await getOnboardingProgress(userId)
+  if (!progress.done) redirect(progress.nextPath)
 
   const rangeRaw = getFirst(searchParams.range)
   const fromStr = getFirst(searchParams.from)
