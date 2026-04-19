@@ -50,6 +50,12 @@
   /* Тени */
   --shadow:      0 2px 12px rgba(61, 46, 30, 0.08), 0 1px 3px rgba(61, 46, 30, 0.05);
   --shadowLg:    0 8px 32px rgba(61, 46, 30, 0.12), 0 2px 8px rgba(61, 46, 30, 0.06);
+
+  /* Скролл (Firefox: scrollbar-color; WebKit ниже) */
+  --scrollbarSize: 10px;
+  --scrollbarTrack: rgba(232, 222, 206, 0.65);
+  --scrollbarThumb: rgba(200, 131, 59, 0.42);
+  --scrollbarThumbHover: rgba(200, 131, 59, 0.62);
 }
 
 /* === RESET === */
@@ -60,6 +66,11 @@
 html, body {
   height: 100%;
   margin: 0;
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbarThumb) var(--scrollbarTrack);
 }
 
 a {
@@ -80,6 +91,55 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: light;
+}
+
+/*
+ * Кастомный скролл под палитру (Chrome / Safari / Edge).
+ * Полоса как тонкий «ободок», бегунок — тёплая охра; угол без артефактов.
+ */
+*::-webkit-scrollbar {
+  width: var(--scrollbarSize);
+  height: var(--scrollbarSize);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbarTrack);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(200, 131, 59, 0.5) 0%,
+    rgba(168, 108, 48, 0.55) 100%
+  );
+  border-radius: 999px;
+  border: 2px solid rgba(253, 248, 240, 0.85);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(200, 131, 59, 0.72) 0%,
+    rgba(168, 108, 48, 0.78) 100%
+  );
+  border-color: rgba(253, 248, 240, 0.95);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Узкие зоны — чуть тоньше полоса */
+.uiScrollThin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.uiScrollThin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbarThumb) var(--scrollbarTrack);
 }
 
 /* Мягкая текстура фона — как старая бумага */
@@ -256,6 +316,7 @@ input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="date"],
+input[type="datetime-local"],
 select,
 textarea {
   display: block;
@@ -289,6 +350,33 @@ select {
 
 input[type="date"] {
   color-scheme: light;
+}
+
+/* datetime-local: выпадающий календарь/время — нативный виджет ОС/браузера (полностью не стилизуется).
+   Поле приводим к остальным инпутам; WebKit — иконка календаря; color-scheme — светлая тема попапа где поддерживается */
+input[type="datetime-local"] {
+  color-scheme: light;
+  accent-color: var(--ochre);
+  min-height: 48px;
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.72;
+    padding: 6px;
+    margin-left: 2px;
+    border-radius: var(--radiusSm);
+    transition: opacity 140ms ease, background 140ms ease;
+  }
+
+  &:hover::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    background: rgba(var(--ochreRgb), 0.12);
+  }
+
+  &:focus::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    background: rgba(var(--ochreRgb), 0.16);
+  }
 }
 
 /* === КАРТОЧКИ === */
@@ -1229,18 +1317,6 @@ input[type="date"] {
   color: var(--text);
 }
 
-/* === НАВИГАЦИЯ НА СТРАНИЦЕ === */
-.pageBackLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: var(--muted);
-  transition: color 140ms ease;
-
-  &:hover { color: var(--textSoft); }
-}
-
 /* === БЫСТРАЯ ПАНЕЛЬ ДЕЙСТВИЙ В ЛЕНТЕ === */
 
 /* Горизонтальный скролл объектов */
@@ -1371,52 +1447,7 @@ input[type="date"] {
   flex-direction: column;
   gap: 10px;
   animation: fadeSlideDown 160ms ease;
-}
-
-/* Кастомные select-popover */
-.popoverSelectButton {
-  width: 100%;
-  padding: 13px 16px;
-  border-radius: var(--radius);
-  border: 1.5px solid var(--border);
-  background: var(--cream);
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.popoverSelectMenu {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  z-index: 30;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface);
-  box-shadow: var(--shadowLg);
-  max-height: 220px;
-  overflow: auto;
-  padding: 6px;
-}
-
-.popoverSelectOption {
-  width: 100%;
-  text-align: left;
-  padding: 10px 12px;
-  border-radius: 10px;
-  color: var(--textSoft);
-}
-
-.popoverSelectOption:hover {
-  background: rgba(var(--ochreRgb), 0.08);
-}
-
-.popoverSelectOptionActive {
-  background: rgba(var(--ochreRgb), 0.14);
-  color: var(--ochre);
+  overflow: visible;
 }
 
 .popoverPagePicker {
@@ -1453,6 +1484,8 @@ input[type="date"] {
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+@import '../styles/ui/kit';
 
 /* === АДАПТИВ: ДЕСКТОП === */
 @media (min-width: 960px) {

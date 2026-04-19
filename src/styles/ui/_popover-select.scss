@@ -1,0 +1,50 @@
+/* PopoverSelect.tsx (+ общие классы выпадающего списка) */
+.popoverSelectButton {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  background: var(--cream);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.popoverSelectRoot {
+  flex: 1;
+  min-width: 0;
+}
+
+.popoverSelectMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadowLg);
+  max-height: 220px;
+  overflow: auto;
+  padding: 6px;
+}
+
+.popoverSelectOption {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--textSoft);
+}
+
+.popoverSelectOption:hover {
+  background: rgba(var(--ochreRgb), 0.08);
+}
+
+.popoverSelectOptionActive {
+  background: rgba(var(--ochreRgb), 0.14);
+  color: var(--ochre);
+}

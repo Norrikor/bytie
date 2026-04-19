@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 
+import PageBackLink from '@/components/ui/PageBackLink'
 import { getObjectCareOrThrow, assertIsOwner } from '@/lib/acl/objectCare'
 import ObjectCareEditPanel from './ObjectCareEditPanel'
 import { prisma } from '@/lib/db/prisma'
@@ -72,7 +72,7 @@ export default async function ObjectCarePage({
   return (
     <div className="pageSection">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <Link href="/objects" className="pageBackLink">← Назад</Link>
+        <PageBackLink href="/objects">← Назад</PageBackLink>
         <h1 style={{ margin: 0 }}>{obj.name}</h1>
       </div>
 

@@ -1,11 +1,14 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 import ActionEventCard from '../_components/ActionEventCard'
 import FeedPaginationBar from '../_components/FeedPaginationBar'
+import DateTimePicker from '@/components/ui/DateTimePicker'
+import PopoverSelect from '@/components/ui/PopoverSelect'
+import Tooltip from '@/components/ui/Tooltip'
 import { FEED_RANGE_DEFAULT, FEED_RANGE_PRESETS } from '@/lib/feed/feedRange'
 
 type ObjectItem = {
@@ -48,8 +51,9 @@ type FeedClientProps = {
     actorId?: string
   }
   timeMode: 'range' | 'custom' | 'legacy'
-  customFromDefault: string
-  customToDefault: string
+  /** UTC ISO из query (custom-период) */
+  customFromUtcIso: string
+  customToUtcIso: string
 }
 
 function mergeFeedParams(
@@ -70,52 +74,6 @@ function mergeFeedParams(
 
 type Option = { value: string; label: string }
 
-function PopoverSelect({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  options: Option[]
-}) {
-  const [open, setOpen] = useState(false)
-  const active = options.find((o) => o.value === value)
-
-  return (
-    <div className="field" style={{ position: 'relative' }}>
-      <span className="fieldLabel">{label}</span>
-      <button
-        type="button"
-        className="popoverSelectButton"
-        onClick={() => setOpen((v) => !v)}
-      >
-        <span>{active?.label ?? options[0]?.label ?? 'Выбрать'}</span>
-        <span style={{ opacity: 0.6 }}>▾</span>
-      </button>
-      {open ? (
-        <div className="popoverSelectMenu">
-          {options.map((o) => (
-            <button
-              key={o.value || '__all'}
-              type="button"
-              className={`popoverSelectOption${o.value === value ? ' popoverSelectOptionActive' : ''}`}
-              onClick={() => {
-                onChange(o.value)
-                setOpen(false)
-              }}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  )
-}
-
 export default function FeedClient({
   objects,
   events,
@@ -127,8 +85,8 @@ export default function FeedClient({
   activeRangeKey,
   currentFilters,
   timeMode,
-  customFromDefault,
-  customToDefault,
+  customFromUtcIso,
+  customToUtcIso,
 }: FeedClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -168,8 +126,13 @@ export default function FeedClient({
   const [filterObjectId, setFilterObjectId] = useState(currentFilters.objectCareId ?? '')
   const [filterActionId, setFilterActionId] = useState(currentFilters.objectActionId ?? '')
   const [filterActorId, setFilterActorId] = useState(currentFilters.actorId ?? '')
-  const [fromInput, setFromInput] = useState(customFromDefault)
-  const [toInput, setToInput] = useState(customToDefault)
+  const [fromIso, setFromIso] = useState(customFromUtcIso)
+  const [toIso, setToIso] = useState(customToUtcIso)
+
+  useEffect(() => {
+    setFromIso(customFromUtcIso)
+    setToIso(customToUtcIso)
+  }, [customFromUtcIso, customToUtcIso])
   const [startInput, setStartInput] = useState(currentFilters.start ?? '')
   const [endInput, setEndInput] = useState(currentFilters.end ?? '')
 
@@ -228,8 +191,8 @@ export default function FeedClient({
       if (end) p.set('end', end)
       else p.delete('end')
     } else {
-      const from = fromInput
-      const to = toInput
+      const from = fromIso.trim()
+      const to = toIso.trim()
       if (from && to) {
         p.delete('range')
         p.delete('start')
@@ -290,7 +253,22 @@ export default function FeedClient({
 
       {showFilters ? (
         <div className="filtersCompact">
-          <div className="filtersPanelLabel" style={{ marginBottom: 4 }}>Период</div>
+          <Tooltip
+            variant="panel"
+            title="Как задаётся период"
+            leading={<span className="filtersPanelLabel">Период</span>}
+          >
+            <p>
+              Кнопки периода считают интервал от текущего момента назад. Чтобы задать свой диапазон по датам,
+              заполните поля «С» и «По» целиком и нажмите «Применить фильтры»: тогда используются эти границы, пресет
+              отключается.
+            </p>
+            <p>
+              Если хотя бы одно поле пустое, при применении остаётся выбранный пресет (или период по умолчанию), а
+              объект, действие и остальные фильтры всё равно сохраняются.
+            </p>
+          </Tooltip>
+
           <div className="quickObjectTabs" style={{ marginBottom: 4 }}>
             {FEED_RANGE_PRESETS.map(({ id, label }) => (
               <Link
@@ -328,31 +306,26 @@ export default function FeedClient({
               </div>
             ) : (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <div className="field" style={{ flex: 1, minWidth: 140 }}>
-                  <label className="fieldLabel" htmlFor="lffrom">С (дата и время)</label>
-                  <input
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <DateTimePicker
                     id="lffrom"
-                    type="datetime-local"
-                    value={fromInput}
-                    onChange={(e) => setFromInput(e.target.value)}
+                    label="С (дата и время)"
+                    mode="datetime"
+                    valueUtcIso={fromIso}
+                    onChangeUtcIso={setFromIso}
                   />
                 </div>
-                <div className="field" style={{ flex: 1, minWidth: 140 }}>
-                  <label className="fieldLabel" htmlFor="lfto">По</label>
-                  <input
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <DateTimePicker
                     id="lfto"
-                    type="datetime-local"
-                    value={toInput}
-                    onChange={(e) => setToInput(e.target.value)}
+                    label="По"
+                    mode="datetime"
+                    valueUtcIso={toIso}
+                    onChangeUtcIso={setToIso}
                   />
                 </div>
               </div>
             )}
-
-            <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0, lineHeight: 1.35 }}>
-              Пресеты — от «сейчас» назад. Чтобы зафиксировать свои даты, заполните поля «С» и «По» и нажмите «Применить».
-              Без них кнопка сохранит выбранный выше пресет и остальные фильтры.
-            </p>
 
             <PopoverSelect
               label="Объект"

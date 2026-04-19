@@ -4,36 +4,18 @@ import { prisma } from '@/lib/db/prisma'
 import { getCurrentUser } from '@/lib/auth/getCurrentUser'
 import { formatEventOccurredAtLabel } from '@/lib/feed/eventDateLabel'
 import { FEED_RANGE_DEFAULT, FEED_RANGE_MS } from '@/lib/feed/feedRange'
+import {
+  getLegacyTzOffsetMinutes,
+  legacyYmdEndUtc,
+  legacyYmdStartUtc,
+  parseUtcIsoFromUrl,
+} from '@/lib/datetime/wallTime'
 import FeedClient from './FeedClient'
 
 const PAGE_SIZE = 20
 
 function getFirst(param: string | string[] | undefined) {
   return Array.isArray(param) ? param[0] : param
-}
-
-function parseDateOnly(dateStr: string | undefined) {
-  if (!dateStr) return undefined
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return new Date(`${dateStr}T00:00:00.000Z`)
-  const d = new Date(dateStr)
-  return Number.isNaN(d.getTime()) ? undefined : d
-}
-
-/** datetime-local или ISO */
-function parseDateTimeInput(s: string | undefined) {
-  if (!s) return undefined
-  const d = new Date(s)
-  return Number.isNaN(d.getTime()) ? undefined : d
-}
-
-function toDatetimeLocalValue(d: Date) {
-  const pad = (n: number) => String(n).padStart(2, '0')
-  const y = d.getFullYear()
-  const m = pad(d.getMonth() + 1)
-  const day = pad(d.getDate())
-  const h = pad(d.getHours())
-  const min = pad(d.getMinutes())
-  return `${y}-${m}-${day}T${h}:${min}`
 }
 
 function searchParamsToURLSearchParams(
@@ -91,19 +73,20 @@ export default async function FeedPage({
   let activeRangeKey: string | null = null
   let timeMode: 'range' | 'custom' | 'legacy' = 'range'
 
+  const legacyTzOff = getLegacyTzOffsetMinutes()
+
   if (hasCustomRange) {
     timeMode = 'custom'
-    startDate = parseDateTimeInput(fromStr)
-    endDate = parseDateTimeInput(toStr)
+    startDate = parseUtcIsoFromUrl(fromStr)
+    endDate = parseUtcIsoFromUrl(toStr)
     if (!startDate || !endDate) {
       startDate = undefined
       endDate = undefined
     }
   } else if (hasLegacyDates) {
     timeMode = 'legacy'
-    startDate = parseDateOnly(startStr)
-    const endDateBase = parseDateOnly(endStr)
-    endDate = endDateBase ? new Date(endDateBase.getTime() + 24 * 60 * 60 * 1000 - 1) : undefined
+    startDate = startStr ? legacyYmdStartUtc(startStr, legacyTzOff) : undefined
+    endDate = endStr ? legacyYmdEndUtc(endStr, legacyTzOff) : undefined
   } else if (hasRangeParam && rangeRaw) {
     timeMode = 'range'
     activeRangeKey = rangeRaw
@@ -233,10 +216,10 @@ export default async function FeedPage({
     paramsForPagination.set('range', FEED_RANGE_DEFAULT)
   }
 
-  const customFromDefault =
-    timeMode === 'custom' && startDate && endDate ? toDatetimeLocalValue(startDate) : ''
-  const customToDefault =
-    timeMode === 'custom' && startDate && endDate ? toDatetimeLocalValue(endDate) : ''
+  const customFromUtcIso =
+    timeMode === 'custom' && startDate && endDate ? startDate.toISOString() : ''
+  const customToUtcIso =
+    timeMode === 'custom' && startDate && endDate ? endDate.toISOString() : ''
 
   return (
     <FeedClient
@@ -272,8 +255,8 @@ export default async function FeedPage({
           actorId: actorIdFilter,
         }}
         timeMode={timeMode}
-        customFromDefault={customFromDefault}
-        customToDefault={customToDefault}
+        customFromUtcIso={customFromUtcIso}
+        customToUtcIso={customToUtcIso}
       />
   )
 }

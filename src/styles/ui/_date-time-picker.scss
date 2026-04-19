@@ -1,0 +1,161 @@
+/* DateTimePicker.tsx */
+.uiDtPicker {
+  position: relative;
+}
+
+.uiDtPickerPlaceholder {
+  color: var(--muted);
+}
+
+.uiDtPickerTrigger {
+  cursor: pointer;
+  text-align: left;
+}
+
+.uiDtPickerCalendarIcon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.55;
+  color: var(--textSoft);
+}
+
+.uiDtPickerPanel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 45;
+  padding: 14px;
+  border-radius: var(--radiusLg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadowLg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 100%;
+  min-width: 260px;
+}
+
+.uiDtPickerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.uiDtPickerMonth {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.uiDtPickerNav {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radiusSm);
+  border: 1px solid var(--border);
+  background: rgba(255, 250, 240, 0.65);
+  color: var(--textSoft);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  transition: border-color 140ms ease, background 140ms ease;
+
+  &:hover {
+    border-color: rgba(var(--ochreRgb), 0.35);
+    background: rgba(var(--ochreRgb), 0.06);
+    color: var(--ochre);
+  }
+}
+
+.uiDtPickerWeekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.uiDtPickerWeekday {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  text-align: center;
+}
+
+.uiDtPickerGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.uiDtPickerCellEmpty {
+  min-height: 38px;
+}
+
+.uiDtPickerCell {
+  min-height: 38px;
+  border-radius: var(--radiusSm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+
+  &:hover {
+    background: rgba(var(--ochreRgb), 0.08);
+    border-color: rgba(var(--ochreRgb), 0.15);
+  }
+}
+
+.uiDtPickerCellToday:not(.uiDtPickerCellSelected) {
+  border-color: rgba(var(--mossRgb), 0.35);
+  color: var(--moss);
+}
+
+.uiDtPickerCellSelected {
+  background: rgba(var(--ochreRgb), 0.18);
+  border-color: rgba(var(--ochreRgb), 0.45);
+  color: var(--ochre);
+}
+
+.uiDtPickerTime {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.uiDtPickerTimeLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.uiDtPickerTimeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.uiDtPickerTimeSep {
+  opacity: 0.5;
+  font-weight: 600;
+}
+
+.uiDtPickerPanel .popoverSelectMenu {
+  z-index: 55;
+}
+
+.uiDtPickerDone {
+  width: 100%;
+}

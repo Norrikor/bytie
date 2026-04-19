@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
+import PageBackLink from '@/components/ui/PageBackLink'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth/authOptions'
 import { prisma } from '@/lib/db/prisma'
@@ -105,7 +106,7 @@ export default async function PeoplePage({
   return (
     <div className="pageSection">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <Link href="/feed" className="pageBackLink">← Лента</Link>
+        <PageBackLink href="/feed">← Лента</PageBackLink>
         <h1 style={{ margin: 0 }}>
           {isSelf ? 'Моя история' : (targetUser?.name ? `История: ${targetUser.name}` : 'История')}
         </h1>
