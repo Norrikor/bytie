@@ -1,0 +1,10 @@
+services:
+  web:
+    build: .
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:3000:3000"
+    restart: unless-stopped
