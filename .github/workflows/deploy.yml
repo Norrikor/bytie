@@ -33,7 +33,7 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
         run: |
           set -euo pipefail
-          ssh -o IdentitiesOnly=yes \
-            -o ServerAliveInterval=30 \
+          # Do not use IdentitiesOnly=yes here: ssh-agent-only keys would be ignored.
+          ssh -o ServerAliveInterval=30 \
             "${VPS_USER}@${VPS_HOST}" \
             "set -euo pipefail; cd /var/www/bytie; git fetch origin main; git checkout main; git pull --ff-only origin main; docker compose up -d --build"
