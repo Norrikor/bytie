@@ -5,6 +5,8 @@
   Палитра: тёплый крем, льняной, охра, терракота, берёзовый туман.
 */
 
+@use 'sass:meta';
+
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Manrope:wght@300;400;500;600&display=swap');
 
 :root {
@@ -1485,7 +1487,8 @@ input[type="datetime-local"] {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-@import '../styles/ui/kit';
+/* UI-kit после общих правил (через meta.load-css — иначе @use в начале файла меняет каскад). */
+@include meta.load-css('../styles/ui/kit');
 
 /* === АДАПТИВ: ДЕСКТОП === */
 @media (min-width: 960px) {

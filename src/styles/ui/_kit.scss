@@ -1,5 +1,5 @@
-/* UI-kit: стили из компонентов src/components/ui */
-@import 'page-back-link';
-@import 'tooltip';
-@import 'popover-select';
-@import 'date-time-picker';
+/* UI-kit (`src/components/ui`). Подключается из globals через meta.load-css — сохраняет порядок каскада. */
+@forward 'page-back-link';
+@forward 'tooltip';
+@forward 'popover-select';
+@forward 'date-time-picker';
