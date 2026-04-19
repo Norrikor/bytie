@@ -36,7 +36,7 @@ export default function OnboardingCreateFirstAction({ objectCareId }: { objectCa
         return
       }
 
-      router.push(`/onboarding/4?objectCareId=${objectCareId}`)
+      router.push('/feed')
     } catch {
       setError('Не удалось подключиться')
     } finally {
@@ -67,7 +67,7 @@ export default function OnboardingCreateFirstAction({ objectCareId }: { objectCa
         disabled={!canSubmit}
         className="btnPrimary"
       >
-        {submitting ? 'Добавляем…' : 'Дальше →'}
+        {submitting ? 'Добавляем…' : 'В ленту'}
       </button>
     </form>
   )

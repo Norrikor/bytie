@@ -40,12 +40,14 @@ export default function ObjectCareInteractive({
   actions,
   events,
   historyPagination,
+  initialShowAddAction = false,
 }: {
   objectId: string
   currentUserId: string
   actions: Action[]
   events: EventItem[]
   historyPagination: { currentPage: number; totalPages: number; totalCount: number }
+  initialShowAddAction?: boolean
 }) {
   const router = useRouter()
   const [navPending, startNav] = useTransition()
@@ -66,7 +68,7 @@ export default function ObjectCareInteractive({
     }, 5000)
   }
 
-  const [showAddAction, setShowAddAction] = useState(false)
+  const [showAddAction, setShowAddAction] = useState(initialShowAddAction)
   const [newLabel, setNewLabel] = useState('')
   const [newIcon, setNewIcon] = useState('✨')
   const [addError, setAddError] = useState<string | null>(null)

@@ -2,7 +2,7 @@ import { prisma } from '@/lib/db/prisma'
 
 type ProgressResult =
   | { done: true }
-  | { done: false; nextPath: '/onboarding/1' | '/onboarding/2' | '/onboarding/3' | '/onboarding/4'; objectCareId?: string }
+  | { done: false; nextPath: '/onboarding/1' | '/onboarding/2' | '/onboarding/3'; objectCareId?: string }
 
 export async function getOnboardingProgress(userId: string): Promise<ProgressResult> {
   const user = await prisma.user.findUnique({
@@ -29,23 +29,5 @@ export async function getOnboardingProgress(userId: string): Promise<ProgressRes
     return { done: false, nextPath: '/onboarding/3', objectCareId: primaryObjectCareId }
   }
 
-  const firstObjectWithAction = await prisma.objectAction.findFirst({
-    where: { objectCareId: { in: objectCareIds } },
-    orderBy: { createdAt: 'asc' },
-    select: { objectCareId: true },
-  })
-
-  const actorEventsCount = await prisma.actionEvent.count({
-    where: { actorId: userId, objectCareId: { in: objectCareIds }, deletedAt: null },
-  })
-  if (actorEventsCount === 0) {
-    return {
-      done: false,
-      nextPath: '/onboarding/4',
-      objectCareId: firstObjectWithAction?.objectCareId ?? primaryObjectCareId,
-    }
-  }
-
   return { done: true }
 }
-

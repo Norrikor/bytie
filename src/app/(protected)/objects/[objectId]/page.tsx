@@ -53,6 +53,9 @@ export default async function ObjectCarePage({
   })
   const showActorForObject = memberCount > 1
 
+  const openAddActionRaw = getFirst(searchParams.addAction)
+  const openAddAction = openAddActionRaw === '1' || openAddActionRaw === 'true'
+
   const events = await prisma.actionEvent.findMany({
     where: { objectCareId: params.objectId, deletedAt: null },
     orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }],
@@ -84,6 +87,7 @@ export default async function ObjectCarePage({
         objectId={params.objectId}
         currentUserId={userId}
         actions={actions}
+        initialShowAddAction={openAddAction}
         events={events.map((e) => ({
           id: e.id,
           objectActionId: e.objectActionId,

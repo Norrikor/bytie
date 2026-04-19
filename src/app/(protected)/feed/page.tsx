@@ -134,22 +134,6 @@ export default async function FeedPage({
     objectHasMultipleMembers.set(row.objectCareId, row._count._all > 1)
   }
 
-  const hasAnyEvents = await prisma.actionEvent.count({
-    where: { actorId: userId, deletedAt: null },
-  })
-  if (hasAnyEvents === 0) {
-    const onboardingObjectCareId = objectCareIds[0]
-    const onboardingActionsCount = await prisma.objectAction.count({
-      where: { objectCareId: onboardingObjectCareId },
-    })
-    if (onboardingActionsCount === 0) redirect('/onboarding/3')
-
-    const onboardingEventsCount = await prisma.actionEvent.count({
-      where: { objectCareId: onboardingObjectCareId, actorId: userId, deletedAt: null },
-    })
-    if (onboardingEventsCount === 0) redirect('/onboarding/4')
-  }
-
   const objectCareFilterOk =
     objectCareIdFilter ? objectCareIds.includes(objectCareIdFilter) : true
 

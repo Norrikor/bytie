@@ -380,48 +380,60 @@ export default function FeedClient({
                   {o.name}
                 </button>
               ))}
+              <Link href="/objects" className="quickObjectTab quickObjectTab--active" scroll={false}>
+                + добавить
+              </Link>
             </div>
           ) : (
-            <div style={{ fontSize: 14, color: 'var(--textSoft)', fontWeight: 500 }}>
-              {objects[0].name}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 14, color: 'var(--textSoft)', fontWeight: 500 }}>{objects[0].name}</div>
+              <Link href="/objects" className="quickObjectTab quickObjectTab--active" scroll={false}>
+                + добавить
+              </Link>
             </div>
           )}
 
           {selectedObject ? (
-            selectedObject.actions.length === 0 ? (
-              <div style={{ fontSize: 13, color: 'var(--muted)', padding: '8px 0' }}>
-                Нет действий —{' '}
-                <Link href={`/objects/${selectedObject.id}`} style={{ color: 'var(--ochre)', textDecoration: 'underline' }}>
-                  добавить
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <Link href={`/objects/${selectedObject.id}`} className="btnIcon btnIcon--accent" style={{ width: 'auto' }}>
+                  {selectedObject.actions.length > 0 ? 'Подробнее' : 'Настройки'}
+                </Link>
+                <Link
+                  href={`/objects/${selectedObject.id}?addAction=1`}
+                  className="btnGhost"
+                  style={{ width: 'auto' }}
+                >
+                  + Действие
                 </Link>
               </div>
-            ) : (
-              <div className="quickActionsRow">
-                {selectedObject.actions.map((a) => {
-                  const isPressed = pressedActionId === a.id
-                  const isLogged = loggedActionId === a.id
-                  return (
-                    <button
-                      key={a.id}
-                      type="button"
-                      disabled={isPending || pressedActionId !== null}
-                      onClick={() => logAction(selectedObject.id, a.id)}
-                      className={`quickActionBtn${isPressed || isLogged ? ' quickActionBtn--pressed' : ''}`}
-                    >
-                      <span className="quickActionBtnIcon">
-                        {isLogged ? '✓' : a.icon}
-                      </span>
-                      <span className="quickActionBtnLabel">{a.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            )
-          ) : (
-            <div style={{ fontSize: 13, color: 'var(--muted)' }}>
-              Выберите объект выше
+
+              {selectedObject.actions.length === 0 ? (
+                <div style={{ fontSize: 13, color: 'var(--muted)', padding: '8px 0' }}>
+                  Пока нет действий. Добавьте первое и потом нажимайте его отсюда.
+                </div>
+              ) : (
+                <div className="quickActionsRow">
+                  {selectedObject.actions.map((a) => {
+                    const isPressed = pressedActionId === a.id
+                    const isLogged = loggedActionId === a.id
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        disabled={isPending || pressedActionId !== null}
+                        onClick={() => logAction(selectedObject.id, a.id)}
+                        className={`quickActionBtn${isPressed || isLogged ? ' quickActionBtn--pressed' : ''}`}
+                      >
+                        <span className="quickActionBtnIcon">{isLogged ? '✓' : a.icon}</span>
+                        <span className="quickActionBtnLabel">{a.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
-          )}
+          ) : null}
         </div>
       ) : null}
 
