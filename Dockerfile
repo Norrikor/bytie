@@ -1,5 +1,10 @@
 FROM node:20.8.1-slim
 
+# Prisma migrate/generate needs OpenSSL in the image (node:*-slim is minimal).
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Install all deps (incl. dev) first: NODE_ENV=production would skip devDependencies
