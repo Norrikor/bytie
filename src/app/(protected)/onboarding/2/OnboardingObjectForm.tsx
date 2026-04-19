@@ -1,12 +1,10 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 const suggestions = ['Я', 'Кот', 'Машина', 'Цветок', 'Пёс']
 
 export default function OnboardingObjectForm() {
-  const router = useRouter()
   const [name, setName] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -33,9 +31,9 @@ export default function OnboardingObjectForm() {
       const json = (await res.json().catch(() => null)) as any
       const objectId = json?.object?.id as string | undefined
       if (objectId) {
-        router.push(`/onboarding/3?objectCareId=${objectId}`)
+        window.location.replace(`/onboarding/3?objectCareId=${objectId}`)
       } else {
-        router.push('/onboarding/3')
+        window.location.replace('/onboarding/3')
       }
     } catch {
       setError('Не удалось подключиться')

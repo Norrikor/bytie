@@ -1,12 +1,10 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 import ActionEmojiField from '../../_components/ActionEmojiField'
 
 export default function OnboardingCreateFirstAction({ objectCareId }: { objectCareId: string }) {
-  const router = useRouter()
   const [label, setLabel] = useState('')
   const [icon, setIcon] = useState('✨')
   const [submitting, setSubmitting] = useState(false)
@@ -36,7 +34,7 @@ export default function OnboardingCreateFirstAction({ objectCareId }: { objectCa
         return
       }
 
-      router.push('/feed')
+      window.location.replace('/feed')
     } catch {
       setError('Не удалось подключиться')
     } finally {

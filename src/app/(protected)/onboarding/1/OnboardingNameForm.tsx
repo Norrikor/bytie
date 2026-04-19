@@ -1,10 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function OnboardingNameForm() {
-  const router = useRouter()
   const [name, setName] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -29,7 +27,7 @@ export default function OnboardingNameForm() {
         return
       }
 
-      router.push('/onboarding/2')
+      window.location.replace('/onboarding/2')
     } catch {
       setError('Не удалось подключиться')
     } finally {
