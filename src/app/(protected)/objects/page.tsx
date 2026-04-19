@@ -23,7 +23,7 @@ export default async function ObjectsPage() {
   return (
     <div className="pageSection">
       <div className="pageHeader">
-        <h1>Забота</h1>
+        <h1>Подопечные</h1>
         <p className="pageLead">Всё, о чём вы печётесь — здесь. Нажмите, чтобы отметить действие.</p>
       </div>
 

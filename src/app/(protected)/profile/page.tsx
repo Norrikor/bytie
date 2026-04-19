@@ -10,7 +10,7 @@ export default async function ProfilePage() {
   return (
     <div className="pageSection">
       <div className="pageHeader">
-        <h1>Я</h1>
+        <h1>Профиль</h1>
         <p className="pageLead">Ваша страничка.</p>
       </div>
 

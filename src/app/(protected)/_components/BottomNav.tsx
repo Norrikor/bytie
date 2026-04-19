@@ -3,19 +3,26 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+import { isSharedSectionEnabled } from '@/lib/featureFlags'
+
 const NAV_ITEMS = [
-  { href: '/feed',    icon: '📜', label: 'Лента'  },
-  { href: '/objects', icon: '🏡', label: 'Забота' },
-  { href: '/shared',  icon: '🌿', label: 'Вместе' },
-  { href: '/profile', icon: '☀️', label: 'Я'      },
-]
+  { href: '/feed',    icon: '📜', label: 'Лента' },
+  { href: '/objects', icon: '🏡', label: 'Подопечные' },
+  { href: '/shared',  icon: '🌿', label: 'Вместе', feature: 'shared' as const },
+  { href: '/profile', icon: '☀️', label: 'Профиль' },
+] as const
 
 export default function BottomNav() {
   const pathname = usePathname()
+  const sharedOn = isSharedSectionEnabled()
+
+  const items = NAV_ITEMS.filter(
+    (item) => item.feature !== 'shared' || sharedOn
+  )
 
   return (
     <nav className="bottomNav" aria-label="Основная навигация">
-      {NAV_ITEMS.map(({ href, icon, label }) => {
+      {items.map(({ href, icon, label }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`)
         return (
           <Link

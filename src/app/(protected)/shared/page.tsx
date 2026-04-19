@@ -3,8 +3,11 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db/prisma'
 import SharedClient from './SharedClient'
 import { getCurrentUser } from '@/lib/auth/getCurrentUser'
+import { isSharedSectionEnabled } from '@/lib/featureFlags'
 
 export default async function SharedPage() {
+  if (!isSharedSectionEnabled()) redirect('/feed')
+
   const current = await getCurrentUser()
   if (!current?.user?.name) redirect('/onboarding/1')
 
