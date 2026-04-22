@@ -2,26 +2,39 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 import { isSharedSectionEnabled } from '@/lib/featureFlags'
-import { requireAdmin } from '@/lib/auth/requireAdmin'
 
 const NAV_ITEMS = [
   { href: '/feed',    icon: '📜', label: 'Лента' },
   { href: '/objects', icon: '🏡', label: 'Подопечные' },
   { href: '/shared',  icon: '🌿', label: 'Вместе', feature: 'shared' as const },
-  { href: '/adminka', icon: '🛠️', label: 'Админка', role: 'ADMIN' as const },
+  { href: '/adminka', icon: '🛠️', label: 'Админка', adminOnly: true as const },
   { href: '/profile', icon: '☀️', label: 'Профиль' },
 ] as const
 
 export default function BottomNav() {
   const pathname = usePathname()
   const sharedOn = isSharedSectionEnabled()
+  const [role, setRole] = useState<'USER' | 'ADMIN'>('USER')
 
-  // BottomNav is a client component. We can only hide client-side if we know the user's role.
-  // The route itself is protected server-side via `requireAdmin()` in `src/app/(protected)/adminka/page.tsx`.
-  // So here we keep it permissive and rely on server-side guard.
-  const items = NAV_ITEMS.filter((item) => item.feature !== 'shared' || sharedOn)
+  useEffect(() => {
+    // BottomNav is client-side; we keep server-side protection in `adminka` page as well.
+    // This is only for hiding the menu item.
+    fetch('/api/me')
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.user?.role === 'ADMIN') setRole('ADMIN')
+      })
+      .catch(() => {})
+  }, [])
+
+  const items = NAV_ITEMS.filter((item) => {
+    if (item.feature === 'shared' && !sharedOn) return false
+    if ((item as any).adminOnly && role !== 'ADMIN') return false
+    return true
+  })
 
   return (
     <nav className="bottomNav" aria-label="Основная навигация">
