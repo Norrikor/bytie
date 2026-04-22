@@ -24,6 +24,13 @@ export default async function ProfilePage() {
         <div style={{ fontSize: 15, color: 'var(--textSoft)' }}>{current.user.email ?? '—'}</div>
       </div>
 
+      {current.user.role && current.user.role !== 'USER' ? (
+        <div className="card">
+          <div className="filtersPanelLabel" style={{ marginBottom: 6 }}>Роль</div>
+          <div style={{ fontSize: 15, color: 'var(--textSoft)' }}>{current.user.role}</div>
+        </div>
+      ) : null}
+
       <SignOutButton />
     </div>
   )
