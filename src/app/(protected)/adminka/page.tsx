@@ -45,9 +45,6 @@ export default async function AdminkaPage({
   return (
     <div className="pageSection">
       <h1>Админка</h1>
-      <p style={{ opacity: 0.75, marginTop: -8 }}>
-        Включено как админ: <span style={{ fontWeight: 600 }}>{user.email ?? user.id}</span>
-      </p>
 
       <AdminkaTimePresetsClient rangePresets={ADMINKA_TIME_PRESETS} />
 
