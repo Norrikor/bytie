@@ -9,7 +9,9 @@ import FeedPaginationBar from '../_components/FeedPaginationBar'
 import DateTimePicker from '@/components/ui/DateTimePicker'
 import PopoverSelect from '@/components/ui/PopoverSelect'
 import Tooltip from '@/components/ui/Tooltip'
-import { FEED_RANGE_DEFAULT, FEED_RANGE_PRESETS } from '@/lib/feed/feedRange'
+import { FEED_RANGE_DEFAULT } from '@/lib/feed/feedRange'
+import TimePresets from '@/components/ui/TimePresets'
+import { FEED_TIME_PRESETS, type TimePresetKey } from '@/lib/filters/timePresets'
 
 type ObjectItem = {
   id: string
@@ -270,16 +272,11 @@ export default function FeedClient({
           </Tooltip>
 
           <div className="quickObjectTabs" style={{ marginBottom: 4 }}>
-            {FEED_RANGE_PRESETS.map(({ id, label }) => (
-              <Link
-                key={id}
-                href={hrefForPreset(id)}
-                className={`quickObjectTab${activeRangeKey === id ? ' quickObjectTab--active' : ''}`}
-                scroll={false}
-              >
-                {label}
-              </Link>
-            ))}
+            <TimePresets
+              presets={FEED_TIME_PRESETS}
+              paramKey="range"
+              activeKey={(activeRangeKey as TimePresetKey) ?? null}
+            />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

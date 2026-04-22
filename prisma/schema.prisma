@@ -28,6 +28,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  role UserRole @default(USER)
+
   accounts          Account[]
   sessions          Session[]
   // For MVP we don't use email verification flows; keeping `VerificationToken`
@@ -41,6 +43,11 @@ model User {
 
   inviterInvitations ObjectShareInvitation[] @relation("InviterInvitations")
   invitedInvitations ObjectShareInvitation[] @relation("InvitedInvitations")
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 model Account {
