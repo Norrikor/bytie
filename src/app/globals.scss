@@ -38,7 +38,8 @@
   /* Текст */
   --text:        var(--ink);
   --textSoft:    var(--earth);
-  --muted:       var(--straw);
+  /* Чуть темнее «соломы», чтобы вторичный текст читался на linen/cream */
+  --muted:       color-mix(in srgb, var(--straw) 82%, var(--earth) 18%);
 
   /* Рамки */
   --border:      rgba(140, 115, 85, 0.2);

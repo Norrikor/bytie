@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import ConfirmDialog from '../../_components/ConfirmDialog'
+import ConfirmDialog from '@/components/app/ConfirmDialog'
 
 export default function ObjectCareEditPanel({
   objectId,

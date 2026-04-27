@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 
-import BottomNav from './_components/BottomNav'
+import BottomNav from '@/components/app/BottomNav'
 import { requireAuth } from '@/lib/auth/requireAuth'
 
 export default async function ProtectedLayout({ children }: { children: ReactNode }) {

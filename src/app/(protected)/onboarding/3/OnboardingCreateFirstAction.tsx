@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 
-import ActionEmojiField from '../../_components/ActionEmojiField'
+import ActionEmojiField from '@/components/app/ActionEmojiField'
 
 export default function OnboardingCreateFirstAction({ objectCareId }: { objectCareId: string }) {
   const [label, setLabel] = useState('')

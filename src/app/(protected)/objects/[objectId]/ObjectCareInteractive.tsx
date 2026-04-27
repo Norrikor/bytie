@@ -4,10 +4,10 @@ import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-import ActionEmojiField from '../../_components/ActionEmojiField'
-import ActionEventCard from '../../_components/ActionEventCard'
-import ConfirmDialog from '../../_components/ConfirmDialog'
-import FeedPaginationBar from '../../_components/FeedPaginationBar'
+import ActionEmojiField from '@/components/app/ActionEmojiField'
+import ActionEventCard from '@/components/app/ActionEventCard'
+import ConfirmDialog from '@/components/app/ConfirmDialog'
+import FeedPaginationBar from '@/components/app/FeedPaginationBar'
 
 type ConfirmDeleteTarget =
   | null

@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 
+import EventMetaTime from './EventMetaTime'
+
 export type ActionEventCardProps = {
   occurredAt: string
   occurredAtLabel: string
@@ -47,9 +49,7 @@ export default function ActionEventCard({
           ) : null}
         </div>
         <div className="eventMetaRow">
-          <time className="eventMetaTime" dateTime={occurredAt}>
-            {occurredAtLabel}
-          </time>
+          <EventMetaTime occurredAt={occurredAt} serverLabel={occurredAtLabel} />
           {showActor ? (
             <>
               <span className="eventMetaSep" aria-hidden>
