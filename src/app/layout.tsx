@@ -19,6 +19,11 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   title: 'Быт(ь)',
   description: 'Лёгкое место для тех, кто заботится',
+  icons: {
+    icon: '/bytie-logo.png',
+    shortcut: '/bytie-logo.png',
+    apple: '/bytie-logo.png',
+  },
 }
 
 export default function RootLayout({

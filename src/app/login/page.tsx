@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -43,7 +44,17 @@ export default function LoginPage() {
     <main className="authShell">
       <div className="authCard">
         <div className="authHeader">
-          <h1 className="authTitle">С возвращением</h1>
+          <div className="authBrand">
+            <Image
+              src="/bytie-logo.png"
+              alt="Логотип Быт(ь)"
+              width={44}
+              height={44}
+              className="authBrandLogo"
+              priority
+            />
+            <h1 className="authTitle">С возвращением</h1>
+          </div>
           <p className="authSubtitle">
             Ваш быт ждёт. Войдите, чтобы продолжить.
           </p>

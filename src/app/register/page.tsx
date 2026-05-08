@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -58,7 +59,17 @@ export default function RegisterPage() {
     <main className="authShell">
       <div className="authCard">
         <div className="authHeader">
-          <h1 className="authTitle">Быт(ь)</h1>
+          <div className="authBrand">
+            <Image
+              src="/bytie-logo.png"
+              alt="Логотип Быт(ь)"
+              width={44}
+              height={44}
+              className="authBrandLogo"
+              priority
+            />
+            <h1 className="authTitle">Быт(ь)</h1>
+          </div>
           <p className="authSubtitle">
             Место, где забота о близких, себе и всём вокруг становится чуть легче.
             Пара шагов — и вы дома.
